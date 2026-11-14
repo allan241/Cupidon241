@@ -1,0 +1,93 @@
+
+import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason
+} from "@whiskeysockets/baileys";
+import pino from "pino";
+
+const PREFIX = ".";
+
+async function startBot() {
+  const { state, saveCreds } = await useMultiFileAuthState("session");
+
+  const bot = makeWASocket({
+    auth: state,
+    logger: pino({ level: "silent" })
+  });
+
+  bot.ev.on("creds.update", saveCreds);
+
+  bot.ev.on("connection.update", ({ connection, lastDisconnect }) => {
+    if (connection === "open") {
+      console.log("👑 CUPIDON241 CONNECTÉ !");
+    }
+    if (connection === "close") {
+      if (lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut) {
+        startBot();
+      }
+    }
+  });
+
+  bot.ev.on("messages.upsert", async ({ messages }) => {
+    const msg = messages[0];
+    if (!msg?.message || msg.key.fromMe) return;
+
+    const chat = msg.key.remoteJid;
+    const body =
+      msg.message.conversation ||
+      msg.message.extendedTextMessage?.text ||
+      "";
+
+    if (!body.startsWith(PREFIX)) return;
+
+    const command = body.slice(PREFIX.length).trim().toLowerCase();
+
+    if (command === "ping") {
+      await bot.sendMessage(chat, { text: "🏓 CUPIDON241 répond !" });
+    }
+
+    if (command === "alive") {
+      await bot.sendMessage(chat, { text: "❤️ CUPIDON241 est en ligne !" });
+    }
+
+    if (command === "menu") {
+      await bot.sendMessage(chat, {
+        text: `👑 CUPIDON241
+
+📌 GÉNÉRAL
+.ping
+.alive
+.menu
+
+👥 GROUPES
+.groupinfo
+.kick
+.promote
+.demote
+.antilink
+.welcome
+.goodbye
+
+🛠️ OUTILS
+.owner
+.runtime
+.date
+.heure`
+      });
+    }
+
+    if (command === "date") {
+      await bot.sendMessage(chat, {
+        text: "📅 " + new Date().toLocaleDateString("fr-FR")
+      });
+    }
+
+    if (command === "heure") {
+      await bot.sendMessage(chat, {
+        text: "🕒 " + new Date().toLocaleTimeString("fr-FR")
+      });
+    }
+  });
+}
+
+startBot().catch(console.error);
