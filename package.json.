@@ -1,0 +1,15 @@
+
+{
+  "name": "cupidon241",
+  "version": "1.0.0",
+  "description": "Bot WhatsApp CUPIDON241",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "latest",
+    "pino": "latest"
+  }
+}
